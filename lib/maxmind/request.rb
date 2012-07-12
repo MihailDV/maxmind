@@ -29,8 +29,7 @@ module Maxmind
     def http
       @http ||=
         begin
-          klass = self.class
-          proxy = [klass.proxy_addr, klass.proxy_port, klass.proxy_user, klass.proxy_pass]
+          proxy = [proxy_addr, proxy_port, proxy_user, proxy_pass]
           Net::HTTP.new(url.host, url.port, *proxy)
         end
     end
