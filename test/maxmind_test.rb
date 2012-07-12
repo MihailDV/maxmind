@@ -95,11 +95,38 @@ class MaxmindTest < Test::Unit::TestCase
       end
 
       should "have http read timeout" do
-        @request.http.read_timeout = HTTP_SETTINGS[:read_timeout]
+        @request.http.read_timeout.should == HTTP_SETTINGS[:read_timeout]
       end
 
       should "have http open timeout" do
-        @request.http.open_timeout = HTTP_SETTINGS[:open_timeout]
+        @request.http.open_timeout.should == HTTP_SETTINGS[:open_timeout]
+      end
+    end
+
+    context "proxy settings" do
+      setup do
+        Maxmind::Request.proxy_addr = "http://proxy.com"
+        Maxmind::Request.proxy_port = 3129
+        Maxmind::Request.proxy_user = "p_user"
+        Maxmind::Request.proxy_pass = "p_pass"
+
+        @request = Maxmind::Request.new('key', REQUIRED_FIELDS, HTTP_SETTINGS)
+      end
+
+      teardown do
+        Maxmind::Request.proxy_addr = nil
+        Maxmind::Request.proxy_port = nil
+        Maxmind::Request.proxy_user = nil
+        Maxmind::Request.proxy_pass = nil
+      end
+
+      should "pass proxy parameters to Net::HTTP" do
+        http = @request.http
+
+        http.proxy_address.should == "http://proxy.com"
+        http.proxy_pass.should == "p_pass"
+        http.proxy_port.should == 3129
+        http.proxy_user.should == "p_user"
       end
     end
 
