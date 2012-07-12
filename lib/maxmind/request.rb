@@ -1,5 +1,6 @@
 module Maxmind
   class Request
+    mattr_accessor :proxy_addr, :proxy_port, :proxy_user, :proxy_pass
     # Required Fields
     attr_accessor :client_ip, :city, :region, :postal, :country, :license_key, :http
 
@@ -26,7 +27,11 @@ module Maxmind
     end
 
     def http
-      @http ||= Net::HTTP.new(url.host, url.port)
+      @http ||=
+        begin
+          proxy = [proxy_addr, proxy_port, proxy_user, proxy_pass]
+          Net::HTTP.new(url.host, url.port, *proxy)
+        end
     end
 
     def query(string = false)
