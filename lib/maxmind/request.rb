@@ -79,7 +79,7 @@ module Maxmind
     def get(query)
       req = Net::HTTP::Get.new("#{url.path}?#{query}")
       response = http.start { |h| h.request(req) }
-      return response.body
+      return response.body.encode("utf-8", "iso-8859-1")
     end
 
     def email=(email)
