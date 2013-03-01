@@ -13,16 +13,33 @@ module Maxmind
       raise ArgumentError, 'need a valid response string' if response.nil?
 
       parse(response)
-      @attributes = attributes_from_response
     end
 
-    def attributes_from_response
-      hash_to_return = {}
-      self.instance_variables.each do |var|
-        hash_to_return[var.to_s.gsub("@","")] = self.instance_variable_get(var)
-      end
-      return hash_to_return
+    alias_method :country_match?, :country_match
+    alias_method :high_risk_country?, :high_risk_country
+    alias_method :anonymous_proxy?, :anonymous_proxy
+    alias_method :is_transparent_proxy?, :is_transparent_proxy
+    alias_method :free_mail?, :free_mail
+    alias_method :carder_email?, :carder_email
+    alias_method :high_risk_username?, :high_risk_username
+    alias_method :high_risk_password?, :high_risk_password
+    alias_method :city_postal_match?, :city_postal_match
+    alias_method :ship_city_postal_match?, :ship_city_postal_match
+    alias_method :bin_match?, :bin_match
+
+    def attributes
+      @attributes ||= []
     end
+
+    def add_attribute(name)
+      attributes << name
+    end
+
+    def read_attribute(attr_name)
+      send(:"#{attr_name}")
+    end
+
+    private
 
     def parse(response)
       response.split(';').each do |parameter|
@@ -38,50 +55,18 @@ module Maxmind
         when 'isTransProxy'
           set_attribute('is_transparent_proxy', v)
         when 'explanation'
-          @explanation = v
+          set_attribute('explanation', v)
         else
           set_attribute(k.gsub(/([A-Z])/, '_\1').downcase, v)
         end
       end
     end
 
-    alias_method :country_match?, :country_match
-    alias_method :high_risk_country?, :high_risk_country
-    alias_method :anonymous_proxy?, :anonymous_proxy
-    alias_method :is_transparent_proxy?, :is_transparent_proxy
-    alias_method :free_mail?, :free_mail
-    alias_method :carder_email?, :carder_email
-    alias_method :high_risk_username?, :high_risk_username
-    alias_method :high_risk_password?, :high_risk_password
-    alias_method :city_postal_match?, :city_postal_match
-    alias_method :ship_city_postal_match?, :ship_city_postal_match
-    alias_method :bin_match?, :bin_match
-
-    # Returns an array of names for the attributes available on this object sorted alphabetically.
-    def attribute_names
-      @attributes.keys.sort
-    end
-
-    # Returns a hash of all the attributes with their names as keys and the values of the attributes as values.
-    def attributes
-      attrs = self.attribute_names.inject({}) do |attrs, name|
-        attrs[name] = read_attribute(name)
-        attrs
-      end
-      attrs.symbolize_keys
-    end
-
-    def read_attribute(attr_name)
-      attr_name = attr_name.to_s
-      if !(value = @attributes[attr_name]).nil?
-        value
-      else
-        nil
-      end
-    end
-
     protected
+
     def set_attribute(k, v)
+      add_attribute(k)
+
       if v.nil?
         self.instance_variable_set("@#{k}", nil)
         return
