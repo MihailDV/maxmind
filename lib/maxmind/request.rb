@@ -77,7 +77,8 @@ module Maxmind
 
       query = required_fields.merge(optional_fields)
         .reject {|k, v| v.nil? }
-        .collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
+        .collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }
+        .join("&")
 
       return query if return_query
 
