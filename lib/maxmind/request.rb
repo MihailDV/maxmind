@@ -1,3 +1,10 @@
+require 'cgi'
+require 'active_support/core_ext/module/attribute_accessors'
+require 'net/http'
+require 'net/https'
+require 'uri'
+require 'digest/md5'
+
 module Maxmind
   class Request
     mattr_accessor :proxy_addr, :proxy_port, :proxy_user, :proxy_pass
@@ -34,7 +41,7 @@ module Maxmind
         end
     end
 
-    def query(string = false)
+    def query(return_query = false)
       validate
 
       required_fields = {
@@ -69,11 +76,12 @@ module Maxmind
       }
 
       query = required_fields.merge(optional_fields)
-      if string == false
-        return get(query.reject {|k, v| v.nil? }.to_query)
-      else
-        return query.reject {|k, v| v.nil? }.to_query
-      end
+        .reject {|k, v| v.nil? }
+        .collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
+
+      return query if return_query
+
+      get(query)
     end
 
     def get(query)
